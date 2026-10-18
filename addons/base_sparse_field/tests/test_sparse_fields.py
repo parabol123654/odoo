@@ -6,6 +6,20 @@ from odoo.tests import tagged, common
 @tagged('at_install', '-post_install')  # LEGACY at_install
 class TestSparseFields(common.TransactionCase):
 
+    def test_sparse_many2one_deleted_record(self):
+        """ a sparse many2one to a deleted record reads as empty. """
+        partner = self.env['res.partner'].create({'name': 'Sparse Partner'})
+        record = self.env['sparse_fields.test'].create({'partner': partner.id})
+        self.assertEqual(record.partner, partner)
+        self.assertEqual(record.data, {'partner': partner.id})
+
+        partner.unlink()
+        self.env.invalidate_all()
+
+        self.assertFalse(record.partner)
+        self.assertEqual(len(record.partner), 0)
+        self.assertEqual(record.partner._name, 'res.partner')
+
     def test_sparse(self):
         """ test sparse fields. """
         record = self.env['sparse_fields.test'].create({})
