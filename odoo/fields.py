@@ -336,7 +336,7 @@ class Field(MetaField('DummyField', (object,), {}), typing.Generic[T]):
         self.args = self._args__ = {key: val for key, val in kwargs.items() if val is not SENTINEL}
 
     def __str__(self):
-        if self.name is None:
+        if getattr(self, 'name', None) is None:
             return "<%s.%s>" % (__name__, type(self).__name__)
         return "%s.%s" % (self.model_name, self.name)
 
@@ -4230,6 +4230,10 @@ class PropertiesDefinition(Field):
             Properties._add_display_name(value, record.env, value_keys=('default',))
 
         return value
+
+    def convert_to_export(self, value, record):
+        # record format -> export format (the JSON the import reads back)
+        return json.dumps(value) if value else ''
 
     @classmethod
     def _validate_properties_definition(cls, properties_definition, env):
